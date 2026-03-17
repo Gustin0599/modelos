@@ -1,0 +1,4 @@
+- los campos que son obligatorios deben ir con el \*
+- en la carpeta assets debe ir los recursos como css y js
+- manejar dos tablas 
+- djngo y ia 
