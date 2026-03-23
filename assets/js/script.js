@@ -1,5 +1,7 @@
-const apiUrl = "api/students.php";
+const studentsApiUrl = "api/students.php";
+const programsApiUrl = "api/programs.php";
 let studentsCache = [];
+let programsCache = [];
 
 const studentsBody = document.getElementById("studentsBody");
 const recentStudentsBodies = [...document.querySelectorAll(".js-recent-students")];
@@ -9,15 +11,19 @@ const editForm = document.getElementById("editForm");
 const deleteForm = document.getElementById("deleteForm");
 const searchInput = document.getElementById("searchInput");
 const searchClear = document.getElementById("searchClear");
+const addProgram = document.getElementById("addProgram");
+const editProgram = document.getElementById("editProgram");
 const viewId = document.getElementById("viewId");
 const viewNombre = document.getElementById("viewNombre");
 const viewApellido = document.getElementById("viewApellido");
 const viewCorreo = document.getElementById("viewCorreo");
+const viewPrograma = document.getElementById("viewPrograma");
 
-const addModal = new bootstrap.Modal(document.getElementById("addModal"));
-const editModal = new bootstrap.Modal(document.getElementById("editModal"));
-const deleteModal = new bootstrap.Modal(document.getElementById("deleteModal"));
-const viewModal = new bootstrap.Modal(document.getElementById("viewModal"));
+const modalOptions = { backdrop: false };
+const addModal = new bootstrap.Modal(document.getElementById("addModal"), modalOptions);
+const editModal = new bootstrap.Modal(document.getElementById("editModal"), modalOptions);
+const deleteModal = new bootstrap.Modal(document.getElementById("deleteModal"), modalOptions);
+const viewModal = new bootstrap.Modal(document.getElementById("viewModal"), modalOptions);
 
 function showError(el, message) {
   el.textContent = message;
@@ -33,7 +39,7 @@ function renderTable(rows, emptyMessage) {
   if (!rows.length) {
     studentsBody.innerHTML = `
       <tr>
-        <td colspan="5" class="text-center text-secondary py-4">${emptyMessage || "No hay estudiantes registrados."}</td>
+        <td colspan="6" class="text-center text-secondary py-4">${emptyMessage || "No hay estudiantes registrados."}</td>
       </tr>
     `;
     return;
@@ -47,6 +53,7 @@ function renderTable(rows, emptyMessage) {
           <td>${student.first_name}</td>
           <td>${student.last_name}</td>
           <td>${student.email}</td>
+          <td>${student.program_name || "Sin programa"}</td>
           <td class="text-end">
             <button class="btn btn-sm btn-outline-primary me-2 btn-view" data-id="${student.Id}">
               <i class="fa-solid fa-eye"></i>
@@ -101,30 +108,12 @@ function renderRecentTable(rows, emptyMessage) {
   });
 }
 
-const PROGRAMS = [
-  "Ingenieria de Sistemas",
-  "Ingenieria Industrial",
-  "Administracion de Empresas",
-  "Diseno Grafico",
-  "Contaduria Publica",
-  "Psicologia",
-];
-
-function deriveProgram(student) {
-  const seed = `${student.email || ""}|${student.Id || ""}`;
-  let hash = 0;
-  for (let i = 0; i < seed.length; i += 1) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  }
-  return PROGRAMS[hash % PROGRAMS.length];
-}
-
-function renderProgramsTable(rows, emptyMessage) {
+function renderProgramsTable(students, programs, emptyMessage) {
   if (!programsBodies.length) {
     return;
   }
 
-  if (!rows.length) {
+  if (!students.length && !programs.length) {
     programsBodies.forEach((tbody) => {
       tbody.innerHTML = `
         <tr>
@@ -136,18 +125,63 @@ function renderProgramsTable(rows, emptyMessage) {
   }
 
   const counts = new Map();
-  rows.forEach((student) => {
-    const program = deriveProgram(student);
-    counts.set(program, (counts.get(program) || 0) + 1);
+
+  if (programs.length) {
+    programs.forEach((program) => {
+      counts.set(Number(program.id), 0);
+    });
+
+    let withoutProgram = 0;
+    students.forEach((student) => {
+      const programId = Number(student.program_id);
+      if (!programId) {
+        withoutProgram += 1;
+        return;
+      }
+
+      counts.set(programId, (counts.get(programId) || 0) + 1);
+    });
+
+    const knownProgramIds = new Set(programs.map((program) => Number(program.id)));
+
+    const ordered = [
+      ...programs.map((program) => [program.name, counts.get(Number(program.id)) || 0]),
+      ...[...counts.entries()]
+        .filter(([programId, count]) => count > 0 && !knownProgramIds.has(programId))
+        .map(([programId, count]) => [`Programa #${programId}`, count]),
+      ...(withoutProgram ? [["Sin programa", withoutProgram]] : []),
+    ].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+    const html = ordered
+      .map(
+        ([programName, count]) => `
+        <tr>
+          <td>${programName}</td>
+          <td class="text-end fw-semibold">${count}</td>
+        </tr>
+      `
+      )
+      .join("");
+
+    programsBodies.forEach((tbody) => {
+      tbody.innerHTML = html;
+    });
+
+    return;
+  }
+
+  students.forEach((student) => {
+    const programName = student.program_name || "Sin programa";
+    counts.set(programName, (counts.get(programName) || 0) + 1);
   });
 
   const ordered = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
   const html = ordered
     .map(
-      ([program, count]) => `
+      ([programName, count]) => `
         <tr>
-          <td>${program}</td>
+          <td>${programName}</td>
           <td class="text-end fw-semibold">${count}</td>
         </tr>
       `
@@ -164,7 +198,7 @@ function applyFilter() {
   if (!query) {
     renderTable(studentsCache);
     renderRecentTable(studentsCache);
-    renderProgramsTable(studentsCache);
+    renderProgramsTable(studentsCache, programsCache);
     return;
   }
 
@@ -172,18 +206,65 @@ function applyFilter() {
     const id = String(student.Id).toLowerCase();
     const nombre = String(student.first_name || "").toLowerCase();
     const apellido = String(student.last_name || "").toLowerCase();
-    return id.includes(query) || nombre.includes(query) || apellido.includes(query);
+    const correo = String(student.email || "").toLowerCase();
+    const programa = String(student.program_name || "").toLowerCase();
+    return id.includes(query) || nombre.includes(query) || apellido.includes(query) || correo.includes(query) || programa.includes(query);
   });
 
   renderTable(filtered, "No hay coincidencias para la busqueda.");
   renderRecentTable(filtered, "No hay coincidencias para el resumen.");
-  renderProgramsTable(filtered, "No hay coincidencias para programas.");
+  renderProgramsTable(filtered, programsCache, "No hay coincidencias para programas.");
+}
+
+function setProgramOptions(selectEl, programs, selectedId) {
+  if (!selectEl) {
+    return;
+  }
+
+  if (!programs.length) {
+    selectEl.innerHTML = `<option value=\"\" selected disabled>No hay programas disponibles</option>`;
+    selectEl.disabled = true;
+    return;
+  }
+
+  selectEl.disabled = false;
+
+  const placeholderSelected = selectedId == null || selectedId === "";
+  const placeholder = `<option value=\"\" disabled ${placeholderSelected ? "selected" : ""}>Seleccione un programa...</option>`;
+  const options = programs
+    .map((program) => `<option value=\"${program.id}\">${program.name}</option>`)
+    .join("");
+
+  selectEl.innerHTML = `${placeholder}${options}`;
+
+  if (!placeholderSelected) {
+    selectEl.value = String(selectedId);
+  }
+}
+
+async function loadPrograms() {
+  try {
+    const response = await fetch(programsApiUrl);
+    const payload = await response.json();
+
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.message || "No se pudo cargar la informacion de programas.");
+    }
+
+    programsCache = payload.data || [];
+    setProgramOptions(addProgram, programsCache);
+    setProgramOptions(editProgram, programsCache);
+  } catch (error) {
+    programsCache = [];
+    setProgramOptions(addProgram, programsCache);
+    setProgramOptions(editProgram, programsCache);
+  }
 }
 
 async function loadStudents() {
   studentsBody.innerHTML = `
     <tr>
-      <td colspan="5" class="text-center text-secondary py-4">Cargando estudiantes...</td>
+      <td colspan="6" class="text-center text-secondary py-4">Cargando estudiantes...</td>
     </tr>
   `;
 
@@ -204,7 +285,7 @@ async function loadStudents() {
   });
 
   try {
-    const response = await fetch(apiUrl);
+    const response = await fetch(studentsApiUrl);
     const payload = await response.json();
 
     if (!response.ok || !payload.success) {
@@ -216,7 +297,7 @@ async function loadStudents() {
   } catch (error) {
     studentsBody.innerHTML = `
       <tr>
-        <td colspan="5" class="text-center text-danger py-4">${error.message}</td>
+        <td colspan="6" class="text-center text-danger py-4">${error.message}</td>
       </tr>
     `;
 
@@ -243,6 +324,7 @@ function fillEditForm(student) {
   editForm.nombre.value = student.first_name;
   editForm.apellido.value = student.last_name;
   editForm.correo.value = student.email;
+  setProgramOptions(editProgram, programsCache, student.program_id);
 }
 
 function fillViewForm(student) {
@@ -250,6 +332,9 @@ function fillViewForm(student) {
   viewNombre.value = student.first_name;
   viewApellido.value = student.last_name;
   viewCorreo.value = student.email;
+  if (viewPrograma) {
+    viewPrograma.value = student.program_name || "Sin programa";
+  }
 }
 
 studentsBody.addEventListener("click", (event) => {
@@ -305,10 +390,11 @@ addForm.addEventListener("submit", async (event) => {
     nombre: addForm.nombre.value.trim(),
     apellido: addForm.apellido.value.trim(),
     correo: addForm.correo.value.trim(),
+    program_id: Number(addForm.program_id.value),
   };
 
   try {
-    const response = await fetch(apiUrl, {
+    const response = await fetch(studentsApiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -320,6 +406,7 @@ addForm.addEventListener("submit", async (event) => {
     }
 
     addForm.reset();
+    setProgramOptions(addProgram, programsCache);
     addModal.hide();
     await loadStudents();
   } catch (error) {
@@ -337,10 +424,11 @@ editForm.addEventListener("submit", async (event) => {
     nombre: editForm.nombre.value.trim(),
     apellido: editForm.apellido.value.trim(),
     correo: editForm.correo.value.trim(),
+    program_id: Number(editForm.program_id.value),
   };
 
   try {
-    const response = await fetch(apiUrl, {
+    const response = await fetch(studentsApiUrl, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -366,7 +454,7 @@ deleteForm.addEventListener("submit", async (event) => {
   const payload = { id: Number(deleteForm.id.value) };
 
   try {
-    const response = await fetch(apiUrl, {
+    const response = await fetch(studentsApiUrl, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -384,4 +472,9 @@ deleteForm.addEventListener("submit", async (event) => {
   }
 });
 
-loadStudents();
+async function bootstrapApp() {
+  await loadPrograms();
+  await loadStudents();
+}
+
+bootstrapApp();

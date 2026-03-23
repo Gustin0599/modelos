@@ -150,6 +150,10 @@ h1 {
     border-radius: 0.5rem;
 }
 
+.modal-backdrop.show {
+    opacity: 0.25;
+}
+
 @media (max-width: 991.98px) {
     .admin-sidebar {
         position: static;

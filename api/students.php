@@ -18,6 +18,12 @@ function respond($status, $payload) {
     exit;
 }
 
+function programExists($pdo, $programId) {
+    $stmt = $pdo->prepare("SELECT 1 FROM programs WHERE id = :id AND active = 1");
+    $stmt->execute([":id" => $programId]);
+    return (bool)$stmt->fetchColumn();
+}
+
 $method = $_SERVER["REQUEST_METHOD"];
 $input = file_get_contents("php://input");
 $data = $input ? json_decode($input, true) : [];
@@ -28,7 +34,7 @@ if ($input && json_last_error() !== JSON_ERROR_NONE) {
 
 try {
     if ($method === "GET") {
-        $stmt = $pdo->query("SELECT Id, first_name, last_name, email FROM students ORDER BY Id ASC");
+        $stmt = $pdo->query("SELECT s.Id, s.first_name, s.last_name, s.email, s.program_id, p.name AS program_name FROM students s LEFT JOIN programs p ON p.id = s.program_id ORDER BY s.Id ASC");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         respond(200, ["success" => true, "data" => $rows]);
     }
@@ -37,16 +43,22 @@ try {
         $nombre = trim($data["nombre"] ?? "");
         $apellido = trim($data["apellido"] ?? "");
         $correo = trim($data["correo"] ?? "");
+        $programId = (int)($data["program_id"] ?? 0);
 
-        if ($nombre === "" || $apellido === "" || $correo === "") {
+        if ($nombre === "" || $apellido === "" || $correo === "" || $programId <= 0) {
             respond(422, ["success" => false, "message" => "Todos los campos son obligatorios."]);
         }
 
-        $stmt = $pdo->prepare("INSERT INTO students (first_name, last_name, email) VALUES (:nombre, :apellido, :correo)");
+        if (!programExists($pdo, $programId)) {
+            respond(422, ["success" => false, "message" => "Programa invalido."]);
+        }
+
+        $stmt = $pdo->prepare("INSERT INTO students (first_name, last_name, email, program_id) VALUES (:nombre, :apellido, :correo, :program_id)");
         $stmt->execute([
             ":nombre" => $nombre,
             ":apellido" => $apellido,
-            ":correo" => $correo
+            ":correo" => $correo,
+            ":program_id" => $programId
         ]);
 
         respond(201, ["success" => true, "message" => "Estudiante creado."]);
@@ -57,16 +69,22 @@ try {
         $nombre = trim($data["nombre"] ?? "");
         $apellido = trim($data["apellido"] ?? "");
         $correo = trim($data["correo"] ?? "");
+        $programId = (int)($data["program_id"] ?? 0);
 
-        if ($id <= 0 || $nombre === "" || $apellido === "" || $correo === "") {
+        if ($id <= 0 || $nombre === "" || $apellido === "" || $correo === "" || $programId <= 0) {
             respond(422, ["success" => false, "message" => "Datos incompletos para actualizar."]);
         }
 
-        $stmt = $pdo->prepare("UPDATE students SET first_name = :nombre, last_name = :apellido, email = :correo WHERE Id = :id");
+        if (!programExists($pdo, $programId)) {
+            respond(422, ["success" => false, "message" => "Programa invalido."]);
+        }
+
+        $stmt = $pdo->prepare("UPDATE students SET first_name = :nombre, last_name = :apellido, email = :correo, program_id = :program_id WHERE Id = :id");
         $stmt->execute([
             ":nombre" => $nombre,
             ":apellido" => $apellido,
             ":correo" => $correo,
+            ":program_id" => $programId,
             ":id" => $id
         ]);
 
