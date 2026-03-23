@@ -1,0 +1,46 @@
+services:
+  web:
+    build: .
+    container_name: clase_web
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: clase_db
+      DB_USER: clase_user
+      DB_PASS: clase123
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: clase_db
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: clase_db
+      MYSQL_USER: clase_user
+      MYSQL_PASSWORD: clase123
+    ports:
+      - "3307:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: clase_phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+
+volumes:
+  dbdata:
+

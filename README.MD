@@ -38,3 +38,42 @@ ALTER TABLE students
 
 CREATE INDEX idx_students_program_id ON students(program_id);
 ```
+
+## Docker (recomendado)
+
+### Requisitos
+- Tener instalado Docker Desktop.
+- En Windows: habilitar WSL2 (si Docker te lo pide).
+
+### Levantar el proyecto
+1) Abre una terminal en la carpeta del proyecto (donde está `docker-compose.yml`).
+2) Ejecuta:
+
+```bash
+docker compose up -d --build
+```
+
+3) Abre:
+- App: `http://localhost:8080/`
+- phpMyAdmin: `http://localhost:8081/`
+  - Servidor: `db`
+  - Usuario: `root`
+  - Contraseña: `root`
+
+### Puertos (por defecto)
+- Web (Apache/PHP): `8080 -> 80`
+- phpMyAdmin: `8081 -> 80`
+- MySQL: `3307 -> 3306`
+
+### Apagar contenedores
+```bash
+docker compose down
+```
+
+### Resetear la base de datos (borrado total)
+Esto elimina el volumen de MySQL y vuelve a ejecutar el SQL de `docker/mysql/init/01_schema.sql`.
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```

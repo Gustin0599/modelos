@@ -2,12 +2,15 @@
 
 // Conexion a la base de datos (MySQL) usando PDO.
 // Este archivo define la variable global `$pdo`, usada por las APIs en `api/`.
-// Nota: en un proyecto real conviene mover estas credenciales a variables de entorno (.env).
+//
+// Soporta variables de entorno (ideal para Docker):
+// - DB_HOST, DB_NAME, DB_USER, DB_PASS
+// Si no existen, usa los valores locales por defecto (XAMPP).
 
-$hostDB = '127.0.0.1';
-$nameDB = 'clase_db';
-$userDB = 'clase_user';
-$passDB = 'clase123';
+$hostDB = getenv('DB_HOST') ?: '127.0.0.1';
+$nameDB = getenv('DB_NAME') ?: 'clase_db';
+$userDB = getenv('DB_USER') ?: 'clase_user';
+$passDB = getenv('DB_PASS') ?: 'clase123';
 
 try {
     // DSN: host + nombre de BD + charset. Si la conexion falla lanza una excepcion.
