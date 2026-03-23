@@ -1,8 +1,14 @@
+// Frontend (vanilla JS) del panel:
+// - Carga programas y estudiantes desde la API (fetch)
+// - Renderiza tablas (estudiantes, resumen, distribución por programas)
+// - Maneja modales para ver/crear/editar/eliminar
+
 const studentsApiUrl = "api/students.php";
 const programsApiUrl = "api/programs.php";
 let studentsCache = [];
 let programsCache = [];
 
+// Referencias a elementos del DOM (tablas, formularios, campos, etc.).
 const studentsBody = document.getElementById("studentsBody");
 const recentStudentsBodies = [...document.querySelectorAll(".js-recent-students")];
 const programsBodies = [...document.querySelectorAll(".js-programs")];
@@ -13,18 +19,23 @@ const searchInput = document.getElementById("searchInput");
 const searchClear = document.getElementById("searchClear");
 const addProgram = document.getElementById("addProgram");
 const editProgram = document.getElementById("editProgram");
+const statStudents = document.getElementById("statStudents");
+const statPrograms = document.getElementById("statPrograms");
 const viewId = document.getElementById("viewId");
 const viewNombre = document.getElementById("viewNombre");
 const viewApellido = document.getElementById("viewApellido");
 const viewCorreo = document.getElementById("viewCorreo");
 const viewPrograma = document.getElementById("viewPrograma");
 
+// Instancias de modales de Bootstrap.
+// backdrop: false -> evita oscurecer el fondo.
 const modalOptions = { backdrop: false };
 const addModal = new bootstrap.Modal(document.getElementById("addModal"), modalOptions);
 const editModal = new bootstrap.Modal(document.getElementById("editModal"), modalOptions);
 const deleteModal = new bootstrap.Modal(document.getElementById("deleteModal"), modalOptions);
 const viewModal = new bootstrap.Modal(document.getElementById("viewModal"), modalOptions);
 
+// Helpers para mostrar/ocultar errores en los modales.
 function showError(el, message) {
   el.textContent = message;
   el.classList.remove("d-none");
@@ -35,6 +46,7 @@ function clearError(el) {
   el.classList.add("d-none");
 }
 
+// Renderiza la tabla principal de estudiantes.
 function renderTable(rows, emptyMessage) {
   if (!rows.length) {
     studentsBody.innerHTML = `
@@ -71,6 +83,7 @@ function renderTable(rows, emptyMessage) {
     .join("");
 }
 
+// Renderiza la tabla del resumen (últimos 5 estudiantes por Id).
 function renderRecentTable(rows, emptyMessage) {
   if (!recentStudentsBodies.length) {
     return;
@@ -108,6 +121,8 @@ function renderRecentTable(rows, emptyMessage) {
   });
 }
 
+// Renderiza la distribución de estudiantes por programa.
+// Si tenemos el catálogo de programas, muestra todos (incluyendo los que tengan 0 estudiantes).
 function renderProgramsTable(students, programs, emptyMessage) {
   if (!programsBodies.length) {
     return;
@@ -193,6 +208,7 @@ function renderProgramsTable(students, programs, emptyMessage) {
   });
 }
 
+// Filtra en memoria usando el texto del buscador y vuelve a renderizar.
 function applyFilter() {
   const query = (searchInput.value || "").trim().toLowerCase();
   if (!query) {
@@ -216,6 +232,17 @@ function applyFilter() {
   renderProgramsTable(filtered, programsCache, "No hay coincidencias para programas.");
 }
 
+// Actualiza chips/indicadores de conteo (estudiantes y programas).
+function updateStats() {
+  if (statStudents) {
+    statStudents.textContent = String(studentsCache.length);
+  }
+  if (statPrograms) {
+    statPrograms.textContent = String(programsCache.length);
+  }
+}
+
+// Llena un <select> con la lista de programas.
 function setProgramOptions(selectEl, programs, selectedId) {
   if (!selectEl) {
     return;
@@ -242,6 +269,7 @@ function setProgramOptions(selectEl, programs, selectedId) {
   }
 }
 
+// Carga el catálogo de programas (para selects y estadísticas).
 async function loadPrograms() {
   try {
     const response = await fetch(programsApiUrl);
@@ -254,13 +282,16 @@ async function loadPrograms() {
     programsCache = payload.data || [];
     setProgramOptions(addProgram, programsCache);
     setProgramOptions(editProgram, programsCache);
+    updateStats();
   } catch (error) {
     programsCache = [];
     setProgramOptions(addProgram, programsCache);
     setProgramOptions(editProgram, programsCache);
+    updateStats();
   }
 }
 
+// Carga estudiantes y renderiza tablas/resúmenes.
 async function loadStudents() {
   studentsBody.innerHTML = `
     <tr>
@@ -293,6 +324,7 @@ async function loadStudents() {
     }
 
     studentsCache = payload.data;
+    updateStats();
     applyFilter();
   } catch (error) {
     studentsBody.innerHTML = `
@@ -319,6 +351,7 @@ async function loadStudents() {
   }
 }
 
+// Llena el formulario de edición con los datos del estudiante.
 function fillEditForm(student) {
   editForm.id.value = student.Id;
   editForm.nombre.value = student.first_name;
@@ -327,6 +360,7 @@ function fillEditForm(student) {
   setProgramOptions(editProgram, programsCache, student.program_id);
 }
 
+// Llena el modal de vista (readonly) con los datos del estudiante.
 function fillViewForm(student) {
   viewId.value = student.Id;
   viewNombre.value = student.first_name;
@@ -337,6 +371,7 @@ function fillViewForm(student) {
   }
 }
 
+// Delegación de eventos: detectar click en los botones de la tabla (ver/editar/eliminar).
 studentsBody.addEventListener("click", (event) => {
   const viewBtn = event.target.closest(".btn-view");
   const editBtn = event.target.closest(".btn-edit");
@@ -369,10 +404,12 @@ studentsBody.addEventListener("click", (event) => {
   }
 });
 
+// Buscador en vivo.
 if (searchInput) {
   searchInput.addEventListener("input", applyFilter);
 }
 
+// Botón limpiar búsqueda.
 if (searchClear) {
   searchClear.addEventListener("click", () => {
     searchInput.value = "";
@@ -381,6 +418,7 @@ if (searchClear) {
   });
 }
 
+// Crear estudiante (POST).
 addForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const errorEl = document.getElementById("addError");
@@ -414,6 +452,7 @@ addForm.addEventListener("submit", async (event) => {
   }
 });
 
+// Editar estudiante (PUT).
 editForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const errorEl = document.getElementById("editError");
@@ -446,6 +485,7 @@ editForm.addEventListener("submit", async (event) => {
   }
 });
 
+// Eliminar estudiante (DELETE).
 deleteForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const errorEl = document.getElementById("deleteError");
@@ -472,6 +512,7 @@ deleteForm.addEventListener("submit", async (event) => {
   }
 });
 
+// Arranque: primero programas (para llenar selects), luego estudiantes.
 async function bootstrapApp() {
   await loadPrograms();
   await loadStudents();

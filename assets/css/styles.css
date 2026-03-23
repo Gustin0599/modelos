@@ -1,4 +1,6 @@
 :root {
+:root {
+    /* Variables de tema para mantener consistencia visual (colores, sombras, fondos). */
     --ink: #1f2d3d;
     --muted: #6c757d;
     --panel: #ffffff;
@@ -12,6 +14,7 @@
 }
 
 body {
+    /* Tipografía + fondo general del panel. */
     font-family: "Space Grotesk", "Segoe UI", sans-serif;
     color: var(--ink);
     background: var(--shell-bg);
@@ -19,10 +22,13 @@ body {
 }
 
 .adminlte-shell {
+    /* Contenedor principal del layout. */
     min-height: 100vh;
+    width: 100%;
 }
 
 .main-header {
+    /* Barra superior fija. */
     position: fixed;
     top: 0;
     right: 0;
@@ -33,6 +39,7 @@ body {
 }
 
 .admin-sidebar {
+    /* Sidebar fija (navegación). */
     position: fixed;
     top: 56px;
     left: 0;
@@ -43,6 +50,7 @@ body {
 }
 
 .sidebar-meta {
+    /* Bloque de meta info del sidebar. */
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding-bottom: 0.85rem;
 }
@@ -73,9 +81,21 @@ body {
 }
 
 .content-wrapper {
+    /* Área de contenido: se desplaza para dejar espacio al sidebar fijo. */
     margin-top: 56px;
     margin-left: 240px;
     min-height: calc(100vh - 56px);
+    width: calc(100% - 240px);
+    background: var(--shell-bg);
+}
+
+.content-wrapper .tab-content,
+.content-wrapper .tab-pane,
+.content-wrapper section.content,
+.content-wrapper section.content-header {
+    /* Forzamos que el contenido use el ancho completo disponible. */
+    width: 100%;
+    max-width: none;
 }
 
 h1 {
@@ -83,6 +103,7 @@ h1 {
 }
 
 .panel-card {
+    /* Tarjetas (cards) con look "panel admin". */
     border: 1px solid var(--panel-border);
     border-radius: 0.5rem;
     background: var(--panel);
@@ -125,6 +146,7 @@ h1 {
 }
 
 .search-group {
+    /* Contenedor del buscador. */
     background: #fff;
     border-radius: 0.5rem;
     box-shadow: var(--shadow);
@@ -146,15 +168,45 @@ h1 {
     border-radius: 0.4rem;
 }
 
+.stats-strip {
+    /* Contenedor de "chips" de estadísticas rápidas. */
+    justify-content: flex-start;
+}
+
+.stat-chip {
+    /* Chip con label + valor (contadores). */
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--panel-border);
+    box-shadow: var(--shadow);
+}
+
+.stat-label {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.stat-value {
+    font-weight: 700;
+    color: var(--ink);
+}
+
 .modal-content {
+    /* Bordes redondeados para modales. */
     border-radius: 0.5rem;
 }
 
 .modal-backdrop.show {
+    /* Backdrop del modal (si estuviera activo). En JS lo desactivamos, pero lo dejamos suave por si cambia. */
     opacity: 0.25;
 }
 
 @media (max-width: 991.98px) {
+    /* Responsive: en pantallas pequeñas el sidebar deja de ser fijo y el contenido ocupa 100%. */
     .admin-sidebar {
         position: static;
         width: 100%;
@@ -184,5 +236,6 @@ h1 {
     .content-wrapper {
         margin-left: 0;
         margin-top: 0;
+        width: 100%;
     }
 }

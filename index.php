@@ -1,5 +1,9 @@
 <?php
-// Vista principal. Los datos se cargan via fetch desde api/students.php
+// Vista principal (UI). Los datos se cargan via fetch desde:
+// - api/programs.php (catálogo de programas)
+// - api/students.php (CRUD/listado de estudiantes)
+//
+// Cache busting: agrega ?v=timestamp a CSS/JS para evitar que el navegador use versiones viejas.
 $assetVersion = @filemtime(__DIR__ . "/assets/js/script.js") ?: time();
 $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
 ?>
@@ -19,14 +23,16 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="app-wrapper adminlte-shell">
+        <!-- NAVBAR superior -->
         <nav class="main-header navbar navbar-expand navbar-dark bg-dark">
             <div class="container-fluid">
                 <span class="navbar-brand mb-0 h1">Admin Panel</span>
             </div>
         </nav>
 
+        <!-- SIDEBAR (navegación por tabs) -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4 admin-sidebar">
-            <div class="brand-link text-center py-3 text-white fw-semibold">AdminLTE 4 Style</div>
+            <div class="brand-link text-center py-3 text-white fw-semibold">Panel Administrativo</div>
             <div class="sidebar px-3 py-3">
                 <div class="sidebar-meta mb-3">
                     <p class="text-white-50 mb-1 small">Modulo</p>
@@ -53,8 +59,10 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
             </div>
         </aside>
 
+        <!-- CONTENIDO principal -->
         <div class="content-wrapper">
             <div class="tab-content" id="mainTabContent">
+                <!-- TAB: Estudiantes -->
                 <div class="tab-pane fade show active" id="pane-main-estudiantes" role="tabpanel" aria-labelledby="nav-main-estudiantes" tabindex="0">
                     <section class="content-header px-3 px-md-4 pt-4 pb-2">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
@@ -66,16 +74,30 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
                     </section>
 
                     <section class="content px-3 px-md-4 pb-4">
-                        <div class="row mb-4">
-                            <div class="col-12 col-xl-6">
+                        <!-- Buscador + estadísticas rápidas -->
+                        <div class="row mb-4 g-3 align-items-center">
+                            <div class="col-12 col-xl-7">
                                 <div class="input-group search-group">
                                     <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
-	                                    <input id="searchInput" type="text" class="form-control" placeholder="Buscar por ID, nombre, apellido, correo o programa">
+                                    <input id="searchInput" type="text" class="form-control" placeholder="Buscar por ID, nombre, apellido, correo o programa">
                                     <button id="searchClear" class="btn btn-outline-secondary" type="button">Limpiar</button>
+                                </div>
+                            </div>
+                            <div class="col-12 col-xl-5">
+                                <div class="d-flex justify-content-xl-end gap-2 flex-wrap stats-strip" aria-label="Estadisticas rapidas">
+                                    <div class="stat-chip">
+                                        <span class="stat-label">Estudiantes</span>
+                                        <span class="stat-value" id="statStudents">-</span>
+                                    </div>
+                                    <div class="stat-chip">
+                                        <span class="stat-label">Programas</span>
+                                        <span class="stat-value" id="statPrograms">-</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Tabla principal (CRUD) -->
                         <div class="card panel-card mb-4">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h3 class="card-title mb-0">Tabla 1 - Gestion CRUD</h3>
@@ -105,6 +127,7 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
                     </section>
                 </div>
 
+                <!-- TAB: Resumen -->
                 <div class="tab-pane fade" id="pane-main-resumen" role="tabpanel" aria-labelledby="nav-main-resumen" tabindex="0">
                     <section class="content-header px-3 px-md-4 pt-4 pb-2">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
@@ -115,6 +138,7 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
                     <section class="content px-3 px-md-4 pb-4">
                         <div class="row g-3 g-lg-4">
                             <div class="col-12 col-xl-7">
+                                <!-- Resumen: últimos 5 estudiantes -->
                                 <div class="card panel-card h-100">
                                     <div class="card-header d-flex justify-content-between align-items-center">
                                         <h3 class="card-title mb-0">Ultimos 5 estudiantes</h3>
@@ -140,10 +164,11 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
                                 </div>
                             </div>
                             <div class="col-12 col-xl-5">
+                                <!-- Resumen: distribución por programa -->
                                 <div class="card panel-card h-100">
                                     <div class="card-header d-flex justify-content-between align-items-center">
-	                                        <h3 class="card-title mb-0">Programas</h3>
-	                                    </div>
+		                                        <h3 class="card-title mb-0">Programas</h3>
+		                                    </div>
 	                                    <div class="card-body">
 	                                        <p class="text-secondary small mb-2">Distribucion por programa segun los estudiantes registrados.</p>
 	                                        <div class="table-responsive">
@@ -168,10 +193,11 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
                     </section>
                 </div>
 
+                <!-- TAB: Programas (distribución completa) -->
                 <div class="tab-pane fade" id="pane-main-programas" role="tabpanel" aria-labelledby="nav-main-programas" tabindex="0">
-	                    <section class="content-header px-3 px-md-4 pt-4 pb-2">
-	                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-	                            <h1 class="h4 mb-0">Programas</h1>
+		                    <section class="content-header px-3 px-md-4 pt-4 pb-2">
+		                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+		                            <h1 class="h4 mb-0">Programas</h1>
 	                            <p class="text-secondary mb-0 small">Distribucion basada en los estudiantes actuales.</p>
 	                        </div>
 	                    </section>
@@ -205,7 +231,7 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
         </div>
     </div>
 
-    <!-- MODAL ANADIR -->
+    <!-- MODAL: AÑADIR estudiante -->
     <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -244,7 +270,7 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
         </div>
     </div>
 
-    <!-- MODAL EDITAR -->
+    <!-- MODAL: EDITAR estudiante -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -284,7 +310,7 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
         </div>
     </div>
 
-    <!-- MODAL ELIMINAR -->
+    <!-- MODAL: ELIMINAR estudiante -->
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -307,7 +333,7 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
         </div>
     </div>
 
-    <!-- MODAL VER -->
+    <!-- MODAL: VER detalle del estudiante -->
     <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -344,8 +370,10 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
         </div>
     </div>
 
+        <!-- Librerías JS -->
 	    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 	    <script src="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0-rc6/dist/js/adminlte.min.js" crossorigin="anonymous"></script>
+        <!-- Script principal del proyecto -->
 	    <script src="assets/js/script.js?v=<?php echo $assetVersion; ?>"></script>
 	</body>
 	</html>
