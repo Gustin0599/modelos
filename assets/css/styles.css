@@ -13,12 +13,78 @@
     --shadow: 0 8px 20px rgba(33, 37, 41, 0.08);
 }
 
+html {
+    /* Fuerza esquema claro para evitar que el navegador "remezcle" colores en modo oscuro/forzado. */
+    color-scheme: light;
+}
+
 body {
     /* Tipografía + fondo general del panel. */
     font-family: "Space Grotesk", "Segoe UI", sans-serif;
-    color: var(--ink);
-    background: var(--shell-bg);
+    color: var(--ink) !important;
+    background: var(--shell-bg) !important;
     min-height: 100vh;
+    /* Evita ajustes automáticos de alto contraste/forced colors (si estuvieran activos). */
+    forced-color-adjust: none;
+    -ms-high-contrast-adjust: none;
+}
+
+* {
+    /* Si algún CSS externo cambia el "text fill" (WebKit), esto mantiene el texto visible. */
+    -webkit-text-fill-color: currentColor;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Modo "contrast-fix" (se activa por JS si detecta contraste muy bajo)        */
+/* -------------------------------------------------------------------------- */
+
+.contrast-fix body {
+    background: #f4f6f9 !important;
+    color: #1f2d3d !important;
+}
+
+.contrast-fix .main-header {
+    background: #343a40 !important;
+}
+
+.contrast-fix .main-header * {
+    color: #ffffff !important;
+}
+
+.contrast-fix .admin-sidebar {
+    background: #222d32 !important;
+}
+
+.contrast-fix .admin-sidebar * {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.contrast-fix .content-wrapper,
+.contrast-fix .content-wrapper * {
+    color: #1f2d3d !important;
+}
+
+.contrast-fix .panel-card,
+.contrast-fix .panel-card * {
+    color: #1f2d3d !important;
+}
+
+.contrast-fix .table,
+.contrast-fix .table th,
+.contrast-fix .table td {
+    color: #1f2d3d !important;
+}
+
+.contrast-fix .table-dark,
+.contrast-fix .table-dark th {
+    color: #ffffff !important;
+}
+
+.contrast-fix .btn-outline-primary,
+.contrast-fix .btn-outline-warning,
+.contrast-fix .btn-outline-danger,
+.contrast-fix .btn-outline-secondary {
+    color: #1f2d3d !important;
 }
 
 .adminlte-shell {
@@ -38,6 +104,36 @@ body {
     background: var(--header-bg);
 }
 
+.main-header,
+.main-header.navbar {
+    background-color: #343a40 !important;
+}
+
+.bg-dark {
+    --bs-bg-opacity: 1;
+    background-color: rgba(33, 37, 41, var(--bs-bg-opacity)) !important;
+}
+
+.main-header.navbar {
+    /* Asegura contraste incluso si alguna hoja externa sobrescribe colores. */
+    background: var(--header-bg) !important;
+}
+
+.main-header .navbar-brand,
+.main-header .navbar-brand:focus,
+.main-header .navbar-brand:hover {
+    color: #ffffff !important;
+}
+
+.navbar-dark .navbar-brand,
+.navbar-dark .navbar-brand:focus,
+.navbar-dark .navbar-brand:hover,
+.navbar-dark .navbar-nav .nav-link,
+.navbar-dark .navbar-nav .nav-link:focus,
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #ffffff !important;
+}
+
 .admin-sidebar {
     /* Sidebar fija (navegación). */
     position: fixed;
@@ -47,6 +143,55 @@ body {
     height: calc(100vh - 56px);
     background: var(--sidebar-bg);
     overflow-y: auto;
+}
+
+.main-sidebar,
+.main-sidebar .sidebar,
+.main-sidebar .brand-link,
+.admin-sidebar,
+.admin-sidebar .sidebar,
+.admin-sidebar .brand-link {
+    background-color: #222d32 !important;
+}
+
+.admin-sidebar,
+.admin-sidebar * {
+    /* Fuerza contraste en el sidebar. */
+    color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.admin-sidebar {
+    background: var(--sidebar-bg) !important;
+}
+
+.admin-sidebar .sidebar-tabs .nav-link {
+    color: #ffffff !important;
+}
+
+.admin-sidebar .sidebar-tabs .nav-link.active {
+    color: #ffffff !important;
+}
+
+.admin-sidebar .text-white-50 {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.admin-sidebar .text-white {
+    color: #ffffff !important;
+}
+
+.sidebar-tabs .nav-link {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.sidebar-tabs .nav-link.active {
+    color: #ffffff !important;
+}
+
+.btn-success,
+.btn-success:hover,
+.btn-success:focus {
+    color: #ffffff !important;
 }
 
 .sidebar-meta {
@@ -86,7 +231,7 @@ body {
     margin-left: 240px;
     min-height: calc(100vh - 56px);
     width: calc(100% - 240px);
-    background: var(--shell-bg);
+    background: var(--shell-bg) !important;
 }
 
 .content-wrapper .tab-content,
@@ -100,6 +245,82 @@ body {
 
 h1 {
     letter-spacing: -0.01em;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Tema/Contraste (evita texto invisible por overrides de CSS externos)        */
+/* -------------------------------------------------------------------------- */
+
+/* Texto general */
+.content-wrapper,
+.content-wrapper * {
+    color: var(--ink);
+}
+
+/* Links */
+a {
+    color: #0d6efd;
+}
+
+a:hover {
+    color: #0b5ed7;
+}
+
+/* Cards */
+.panel-card,
+.panel-card * {
+    color: var(--ink);
+}
+
+.panel-card .card-header,
+.panel-card .card-header * {
+    color: var(--ink);
+}
+
+/* Tablas */
+.table {
+    color: var(--ink) !important;
+}
+
+.table th,
+.table td {
+    color: var(--ink) !important;
+}
+
+.table-dark th {
+    color: #ffffff !important;
+}
+
+.table-dark {
+    --bs-table-bg: #212529;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.05);
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.075);
+}
+
+/* Inputs */
+.form-control,
+.form-select,
+.input-group-text {
+    color: var(--ink) !important;
+}
+
+.form-control::placeholder {
+    color: rgba(31, 45, 61, 0.55) !important;
+}
+
+/* Botones outline: fuerza color del texto */
+.btn-outline-primary,
+.btn-outline-warning,
+.btn-outline-danger,
+.btn-outline-secondary {
+    color: var(--ink) !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-warning:hover,
+.btn-outline-danger:hover,
+.btn-outline-secondary:hover {
+    color: #ffffff !important;
 }
 
 .panel-card {
@@ -143,6 +364,13 @@ h1 {
 .btn-outline-warning,
 .btn-outline-danger {
     border-radius: 0.4rem;
+}
+
+/* Si FontAwesome no carga (CDN bloqueado), mostramos texto en botones de acciones. */
+.action-text {
+    margin-left: 0.35rem;
+    font-weight: 600;
+    font-size: 0.85rem;
 }
 
 .search-group {

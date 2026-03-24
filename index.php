@@ -20,19 +20,67 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/styles.css?v=<?php echo $stylesVersion; ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Fallback de contraste (si algún CSS externo cambia colores y deja texto "invisible"). */
+        html, body { color: #1f2d3d !important; background: #f4f6f9 !important; }
+        .main-header { background: #343a40 !important; }
+        .main-header * { color: #ffffff !important; }
+        .admin-sidebar { background: #222d32 !important; }
+        .admin-sidebar * { color: rgba(255, 255, 255, 0.88) !important; }
+    </style>
+    <script>
+        // Activa un modo de contraste si el navegador/OS deja el texto "invisible".
+        (function () {
+            function parseRgb(value) {
+                const match = String(value || "").match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+                if (!match) return null;
+                return { r: Number(match[1]), g: Number(match[2]), b: Number(match[3]) };
+            }
+
+            function luminance(rgb) {
+                const srgb = [rgb.r, rgb.g, rgb.b].map((v) => v / 255).map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+                return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+            }
+
+            function contrastRatio(color1, color2) {
+                const l1 = luminance(color1);
+                const l2 = luminance(color2);
+                const light = Math.max(l1, l2);
+                const dark = Math.min(l1, l2);
+                return (light + 0.05) / (dark + 0.05);
+            }
+
+            try {
+                const forced = window.matchMedia && window.matchMedia("(forced-colors: active)").matches;
+                if (forced) {
+                    document.documentElement.classList.add("contrast-fix");
+                    return;
+                }
+
+                const styles = window.getComputedStyle(document.documentElement);
+                const fg = parseRgb(styles.color);
+                const bg = parseRgb(styles.backgroundColor);
+                if (fg && bg && contrastRatio(fg, bg) < 2.5) {
+                    document.documentElement.classList.add("contrast-fix");
+                }
+            } catch (e) {
+                // Si algo falla, no bloqueamos la carga.
+            }
+        })();
+    </script>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="app-wrapper adminlte-shell">
         <!-- NAVBAR superior -->
-        <nav class="main-header navbar navbar-expand navbar-dark bg-dark">
+        <nav class="main-header navbar navbar-expand navbar-dark bg-dark" style="background:#343a40;color:#fff;">
             <div class="container-fluid">
-                <span class="navbar-brand mb-0 h1">Admin Panel</span>
+                <span class="navbar-brand mb-0 h1" style="color:#fff;">Admin Panel</span>
             </div>
         </nav>
 
         <!-- SIDEBAR (navegación por tabs) -->
-        <aside class="main-sidebar sidebar-dark-primary elevation-4 admin-sidebar">
-            <div class="brand-link text-center py-3 text-white fw-semibold">Panel Administrativo</div>
+        <aside class="main-sidebar sidebar-dark-primary elevation-4 admin-sidebar" style="background:#222d32;color:#fff;">
+            <div class="brand-link text-center py-3 text-white fw-semibold" style="color:#fff;">Panel Administrativo</div>
             <div class="sidebar px-3 py-3">
                 <div class="sidebar-meta mb-3">
                     <p class="text-white-50 mb-1 small">Modulo</p>
@@ -67,65 +115,120 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
                     <section class="content-header px-3 px-md-4 pt-4 pb-2">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
                             <h1 class="h4 mb-0">Panel de Estudiantes</h1>
-                            <button class="btn btn-success btn-add" data-bs-toggle="modal" data-bs-target="#addModal">
+                            <button class="btn btn-success btn-add" data-bs-toggle="modal" data-bs-target="#addModal" style="background:#00a65a;border-color:#00a65a;color:#fff;">
                                 <i class="fa-solid fa-plus me-2"></i> Anadir Estudiante
                             </button>
                         </div>
                     </section>
 
-                    <section class="content px-3 px-md-4 pb-4">
-                        <!-- Buscador + estadísticas rápidas -->
-                        <div class="row mb-4 g-3 align-items-center">
-                            <div class="col-12 col-xl-7">
-                                <div class="input-group search-group">
-                                    <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
-                                    <input id="searchInput" type="text" class="form-control" placeholder="Buscar por ID, nombre, apellido, correo o programa">
-                                    <button id="searchClear" class="btn btn-outline-secondary" type="button">Limpiar</button>
-                                </div>
-                            </div>
-                            <div class="col-12 col-xl-5">
-                                <div class="d-flex justify-content-xl-end gap-2 flex-wrap stats-strip" aria-label="Estadisticas rapidas">
-                                    <div class="stat-chip">
-                                        <span class="stat-label">Estudiantes</span>
-                                        <span class="stat-value" id="statStudents">-</span>
-                                    </div>
-                                    <div class="stat-chip">
-                                        <span class="stat-label">Programas</span>
-                                        <span class="stat-value" id="statPrograms">-</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tabla principal (CRUD) -->
-                        <div class="card panel-card mb-4">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h3 class="card-title mb-0">Tabla 1 - Gestion CRUD</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0">
-                                        <thead class="table-dark">
-	                                            <tr>
-	                                                <th scope="col">ID</th>
-	                                                <th scope="col">Nombre</th>
-	                                                <th scope="col">Apellido</th>
-	                                                <th scope="col">Correo</th>
-	                                                <th scope="col">Programa</th>
-	                                                <th scope="col" class="text-end">Acciones</th>
-	                                            </tr>
-	                                        </thead>
-	                                        <tbody id="studentsBody">
-	                                            <tr>
-	                                                <td colspan="6" class="text-center text-secondary py-4">Cargando estudiantes...</td>
-	                                            </tr>
-	                                        </tbody>
-	                                    </table>
+	                    <section class="content px-3 px-md-4 pb-4">
+	                        <!-- Buscador + estadísticas rápidas -->
+	                        <div class="row mb-4 g-3 align-items-center">
+	                            <div class="col-12 col-xl-7">
+	                                <div class="input-group search-group">
+	                                    <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
+	                                    <input id="searchInput" type="text" class="form-control" placeholder="Buscar por ID, nombre, apellido, correo o programa">
+	                                    <button id="searchClear" class="btn btn-outline-secondary" type="button">Limpiar</button>
+	                                </div>
+	                            </div>
+	                            <div class="col-12 col-xl-5">
+	                                <div class="d-flex justify-content-xl-end gap-2 flex-wrap stats-strip" aria-label="Estadisticas rapidas">
+	                                    <div class="stat-chip">
+	                                        <span class="stat-label">Estudiantes</span>
+	                                        <span class="stat-value" id="statStudents">-</span>
+	                                    </div>
+	                                    <div class="stat-chip">
+	                                        <span class="stat-label">Programas</span>
+	                                        <span class="stat-value" id="statPrograms">-</span>
+	                                    </div>
 	                                </div>
 	                            </div>
 	                        </div>
-                    </section>
-                </div>
+
+	                        <div class="row g-3 g-lg-4 align-items-start">
+	                            <div class="col-12 col-xxl-8">
+	                                <!-- Tabla principal (CRUD) -->
+	                                <div class="card panel-card">
+	                                    <div class="card-header d-flex justify-content-between align-items-center">
+	                                        <h3 class="card-title mb-0">Tabla 1 - Gestion CRUD</h3>
+	                                    </div>
+	                                    <div class="card-body">
+	                                        <div class="table-responsive">
+	                                            <table class="table table-hover align-middle mb-0">
+	                                                <thead class="table-dark">
+	                                                    <tr>
+	                                                        <th scope="col">ID</th>
+	                                                        <th scope="col">Nombre</th>
+	                                                        <th scope="col">Apellido</th>
+	                                                        <th scope="col">Correo</th>
+	                                                        <th scope="col">Programa</th>
+	                                                        <th scope="col" class="text-end">Acciones</th>
+	                                                    </tr>
+	                                                </thead>
+	                                                <tbody id="studentsBody">
+	                                                    <tr>
+	                                                        <td colspan="6" class="text-center text-secondary py-4">Cargando estudiantes...</td>
+	                                                    </tr>
+	                                                </tbody>
+	                                            </table>
+	                                        </div>
+	                                    </div>
+	                                </div>
+	                            </div>
+	                            <div class="col-12 col-xxl-4">
+	                                <div class="d-flex flex-column gap-3 gap-lg-4">
+	                                    <!-- Resumen rápido: últimos 5 -->
+	                                    <div class="card panel-card">
+	                                        <div class="card-header d-flex justify-content-between align-items-center">
+	                                            <h3 class="card-title mb-0">Ultimos 5 estudiantes</h3>
+	                                        </div>
+	                                        <div class="card-body">
+	                                            <div class="table-responsive">
+	                                                <table class="table table-sm table-striped align-middle mb-0">
+	                                                    <thead class="table-light">
+	                                                        <tr>
+	                                                            <th scope="col">ID</th>
+	                                                            <th scope="col">Nombre</th>
+	                                                            <th scope="col">Correo</th>
+	                                                        </tr>
+	                                                    </thead>
+	                                                    <tbody class="js-recent-students">
+	                                                        <tr>
+	                                                            <td colspan="3" class="text-center text-secondary py-4">Cargando resumen...</td>
+	                                                        </tr>
+	                                                    </tbody>
+	                                                </table>
+	                                            </div>
+	                                        </div>
+	                                    </div>
+	                                    <!-- Distribución rápida: programas -->
+	                                    <div class="card panel-card">
+	                                        <div class="card-header d-flex justify-content-between align-items-center">
+	                                            <h3 class="card-title mb-0">Programas</h3>
+	                                        </div>
+	                                        <div class="card-body">
+	                                            <div class="table-responsive">
+	                                                <table class="table table-sm table-hover align-middle mb-0">
+	                                                    <thead class="table-light">
+	                                                        <tr>
+	                                                            <th scope="col">Programa</th>
+	                                                            <th scope="col" class="text-end">Estudiantes</th>
+	                                                        </tr>
+	                                                    </thead>
+	                                                    <tbody class="js-programs">
+	                                                        <tr>
+	                                                            <td colspan="2" class="text-center text-secondary py-4">Cargando programas...</td>
+	                                                        </tr>
+	                                                    </tbody>
+	                                                </table>
+	                                            </div>
+	                                        </div>
+	                                    </div>
+	                                </div>
+	                            </div>
+	                        </div>
+	                    </section>
+	                </div>
 
                 <!-- TAB: Resumen -->
                 <div class="tab-pane fade" id="pane-main-resumen" role="tabpanel" aria-labelledby="nav-main-resumen" tabindex="0">

@@ -27,13 +27,69 @@ const viewApellido = document.getElementById("viewApellido");
 const viewCorreo = document.getElementById("viewCorreo");
 const viewPrograma = document.getElementById("viewPrograma");
 
-// Instancias de modales de Bootstrap.
-// backdrop: false -> evita oscurecer el fondo.
+// Modales: usamos Bootstrap JS si está disponible. Si no (por ejemplo, CDN bloqueado),
+// usamos un fallback mínimo para abrir/cerrar modales y no romper toda la app.
+function createModalFallback(modalEl) {
+  if (!modalEl) {
+    return { show() {}, hide() {} };
+  }
+
+  function show() {
+    modalEl.style.display = "block";
+    modalEl.classList.add("show");
+    modalEl.removeAttribute("aria-hidden");
+    modalEl.setAttribute("aria-modal", "true");
+    document.body.classList.add("modal-open");
+  }
+
+  function hide() {
+    modalEl.classList.remove("show");
+    modalEl.style.display = "none";
+    modalEl.setAttribute("aria-hidden", "true");
+    modalEl.removeAttribute("aria-modal");
+    document.body.classList.remove("modal-open");
+  }
+
+  return { show, hide };
+}
+
+const hasBootstrapModal = typeof window.bootstrap !== "undefined" && typeof window.bootstrap.Modal === "function";
 const modalOptions = { backdrop: false };
-const addModal = new bootstrap.Modal(document.getElementById("addModal"), modalOptions);
-const editModal = new bootstrap.Modal(document.getElementById("editModal"), modalOptions);
-const deleteModal = new bootstrap.Modal(document.getElementById("deleteModal"), modalOptions);
-const viewModal = new bootstrap.Modal(document.getElementById("viewModal"), modalOptions);
+const addModalEl = document.getElementById("addModal");
+const editModalEl = document.getElementById("editModal");
+const deleteModalEl = document.getElementById("deleteModal");
+const viewModalEl = document.getElementById("viewModal");
+
+const addModal = hasBootstrapModal ? new window.bootstrap.Modal(addModalEl, modalOptions) : createModalFallback(addModalEl);
+const editModal = hasBootstrapModal ? new window.bootstrap.Modal(editModalEl, modalOptions) : createModalFallback(editModalEl);
+const deleteModal = hasBootstrapModal ? new window.bootstrap.Modal(deleteModalEl, modalOptions) : createModalFallback(deleteModalEl);
+const viewModal = hasBootstrapModal ? new window.bootstrap.Modal(viewModalEl, modalOptions) : createModalFallback(viewModalEl);
+
+// Fallback para abrir/cerrar modales cuando Bootstrap JS no está cargado.
+if (!hasBootstrapModal) {
+  document.querySelectorAll("[data-bs-toggle=\"modal\"][data-bs-target]").forEach((trigger) => {
+    trigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      const targetSelector = trigger.getAttribute("data-bs-target");
+      const modalEl = targetSelector ? document.querySelector(targetSelector) : null;
+      if (!modalEl) {
+        return;
+      }
+      createModalFallback(modalEl).show();
+    });
+  });
+
+  document.querySelectorAll("[data-bs-dismiss=\"modal\"]").forEach((btn) => {
+    btn.addEventListener("click", (event) => {
+      event.preventDefault();
+      const modalEl = btn.closest(".modal");
+      if (!modalEl) {
+        return;
+      }
+      createModalFallback(modalEl).hide();
+    });
+  });
+}
 
 // Helpers para mostrar/ocultar errores en los modales.
 function showError(el, message) {
@@ -67,14 +123,14 @@ function renderTable(rows, emptyMessage) {
           <td>${student.email}</td>
           <td>${student.program_name || "Sin programa"}</td>
           <td class="text-end">
-            <button class="btn btn-sm btn-outline-primary me-2 btn-view" data-id="${student.Id}">
-              <i class="fa-solid fa-eye"></i>
+            <button class="btn btn-sm btn-outline-primary me-2 btn-view" data-id="${student.Id}" title="Ver" aria-label="Ver">
+              <i class="fa-solid fa-eye" aria-hidden="true"></i><span class="action-text">Ver</span>
             </button>
-            <button class="btn btn-sm btn-outline-warning me-2 btn-edit" data-id="${student.Id}">
-              <i class="fa-solid fa-pen"></i>
+            <button class="btn btn-sm btn-outline-warning me-2 btn-edit" data-id="${student.Id}" title="Editar" aria-label="Editar">
+              <i class="fa-solid fa-pen" aria-hidden="true"></i><span class="action-text">Editar</span>
             </button>
-            <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${student.Id}">
-              <i class="fa-solid fa-trash"></i>
+            <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${student.Id}" title="Eliminar" aria-label="Eliminar">
+              <i class="fa-solid fa-trash" aria-hidden="true"></i><span class="action-text">Eliminar</span>
             </button>
           </td>
         </tr>
