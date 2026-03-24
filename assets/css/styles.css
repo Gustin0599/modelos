@@ -1,5 +1,4 @@
 :root {
-:root {
     /* Variables de tema para mantener consistencia visual (colores, sombras, fondos). */
     --ink: #1f2d3d;
     --muted: #6c757d;
@@ -351,13 +350,13 @@ a:hover {
 }
 
 .btn-success {
-    background-color: var(--accent);
-    border-color: var(--accent);
+    background-color: var(--accent, #00a65a);
+    border-color: var(--accent, #00a65a);
 }
 
 .btn-success:hover {
-    background-color: var(--accent-dark);
-    border-color: var(--accent-dark);
+    background-color: var(--accent-dark, #008d4c);
+    border-color: var(--accent-dark, #008d4c);
 }
 
 .btn-outline-primary,
@@ -426,6 +425,75 @@ a:hover {
 .modal-content {
     /* Bordes redondeados para modales. */
     border-radius: 0.5rem;
+}
+
+.modal-footer {
+    /* Asegura que los botones del footer siempre se vean (evita overrides raros de CSS externos). */
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+}
+
+.modal-footer .btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 110px;
+    flex: 1 1 140px;
+    max-width: 220px;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Evita que el footer quede “cortado” en pantallas bajas: body scrollea y footer queda visible. */
+.modal-dialog {
+    max-height: calc(100vh - 2rem);
+}
+
+.modal-content {
+    max-height: calc(100vh - 2rem);
+    overflow: hidden;
+}
+
+.modal-body {
+    overflow-y: auto;
+}
+
+.modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: #ffffff;
+    z-index: 1;
+}
+
+/* Especificidad extra (solución definitiva): fuerza el submit visible en Add/Edit. */
+#addForm .modal-footer button[type="submit"],
+#editForm .modal-footer button[type="submit"] {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background-color: var(--accent, #00a65a) !important;
+    border-color: var(--accent, #00a65a) !important;
+    color: #ffffff !important;
+}
+
+.modal-footer .btn-success {
+    background-color: var(--accent, #00a65a) !important;
+    border-color: var(--accent, #00a65a) !important;
+    color: #ffffff !important;
+}
+
+.modal-footer .btn-outline-secondary {
+    border-color: rgba(108, 117, 125, 0.55) !important;
+    color: var(--ink) !important;
+    background: #ffffff !important;
+}
+
+.modal-footer .btn-outline-secondary:hover {
+    background: rgba(108, 117, 125, 0.12) !important;
 }
 
 .modal-backdrop.show {

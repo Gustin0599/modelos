@@ -23,10 +23,23 @@ header("Content-Type: application/json; charset=utf-8");
 // Conexion PDO ($pdo).
 require_once __DIR__ . "/../connectdb.php";
 
+// Corrige nombres de programas con mojibake (ej: "IngenierÃ­a") si la BD fue cargada con un charset incorrecto.
+function fixProgramsMojibake(PDO $pdo): void {
+    try {
+        $pdo->exec(
+            "UPDATE programs
+             SET name = CONVERT(CAST(CONVERT(name USING latin1) AS BINARY) USING utf8mb4)
+             WHERE name LIKE '%Ã%' OR name LIKE '%Â%'"
+        );
+    } catch (Throwable $e) {
+        // Si falla, no rompemos el CRUD.
+    }
+}
+
 // Helper para responder con status HTTP + JSON y terminar el script.
 function respond($status, $payload) {
     http_response_code($status);
-    echo json_encode($payload);
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -49,6 +62,7 @@ if ($input && json_last_error() !== JSON_ERROR_NONE) {
 
 try {
     if ($method === "GET") {
+        fixProgramsMojibake($pdo);
         // Lista de estudiantes + nombre del programa (si tiene).
         $stmt = $pdo->query("SELECT s.Id, s.first_name, s.last_name, s.email, s.program_id, p.name AS program_name FROM students s LEFT JOIN programs p ON p.id = s.program_id ORDER BY s.Id ASC");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);

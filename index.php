@@ -366,7 +366,7 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
 	                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success">Guardar</button>
+                        <button type="submit" class="btn btn-success" style="background:#00a65a !important;border-color:#00a65a !important;color:#fff !important;min-width:140px;">Guardar</button>
                     </div>
                 </form>
             </div>
@@ -406,7 +406,7 @@ $stylesVersion = @filemtime(__DIR__ . "/assets/css/styles.css") ?: time();
 	                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-warning">Actualizar</button>
+                        <button type="submit" class="btn btn-warning" style="min-width:140px;">Actualizar</button>
                     </div>
                 </form>
             </div>

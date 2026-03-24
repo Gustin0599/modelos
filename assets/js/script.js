@@ -27,6 +27,27 @@ const viewApellido = document.getElementById("viewApellido");
 const viewCorreo = document.getElementById("viewCorreo");
 const viewPrograma = document.getElementById("viewPrograma");
 
+// Asegura que los botones de submit en modales no queden invisibles por overrides de CSS/tema.
+function ensureModalSubmitButtons() {
+  const candidates = [];
+  if (addForm) {
+    candidates.push(addForm.querySelector('button[type="submit"]'));
+  }
+  if (editForm) {
+    candidates.push(editForm.querySelector('button[type="submit"]'));
+  }
+
+  candidates.filter(Boolean).forEach((button) => {
+    button.style.setProperty("background-color", "#00a65a", "important");
+    button.style.setProperty("border-color", "#00a65a", "important");
+    button.style.setProperty("color", "#ffffff", "important");
+    button.style.setProperty("min-width", "140px");
+    if (!button.textContent || !button.textContent.trim()) {
+      button.textContent = "Guardar";
+    }
+  });
+}
+
 // Modales: usamos Bootstrap JS si está disponible. Si no (por ejemplo, CDN bloqueado),
 // usamos un fallback mínimo para abrir/cerrar modales y no romper toda la app.
 function createModalFallback(modalEl) {
@@ -575,3 +596,4 @@ async function bootstrapApp() {
 }
 
 bootstrapApp();
+ensureModalSubmitButtons();

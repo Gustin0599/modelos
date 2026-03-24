@@ -19,10 +19,24 @@ header("Content-Type: application/json; charset=utf-8");
 // Conexion PDO ($pdo).
 require_once __DIR__ . "/../connectdb.php";
 
+// Corrige nombres con mojibake (ej: "IngenierÃ­a") si la BD fue cargada con un charset incorrecto.
+// Esto deja la BD "bien" para que el frontend siempre muestre acentos correctamente.
+function fixProgramsMojibake(PDO $pdo): void {
+    try {
+        $pdo->exec(
+            "UPDATE programs
+             SET name = CONVERT(CAST(CONVERT(name USING latin1) AS BINARY) USING utf8mb4)
+             WHERE name LIKE '%Ã%' OR name LIKE '%Â%'"
+        );
+    } catch (Throwable $e) {
+        // Si falla (por permisos/compatibilidad), no rompemos la API.
+    }
+}
+
 // Helper para responder con status HTTP + JSON y terminar el script.
 function respond($status, $payload) {
     http_response_code($status);
-    echo json_encode($payload);
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -30,6 +44,7 @@ $method = $_SERVER["REQUEST_METHOD"];
 
 try {
     if ($method === "GET") {
+        fixProgramsMojibake($pdo);
         // Lista de programas activos (para el selector).
         $stmt = $pdo->query("SELECT id, name FROM programs WHERE active = 1 ORDER BY name ASC");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
