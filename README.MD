@@ -45,6 +45,16 @@ CREATE INDEX idx_students_program_id ON students(program_id);
 - Tener instalado Docker Desktop.
 - En Windows: habilitar WSL2 (si Docker te lo pide).
 
+### Variables de entorno (.env)
+Este proyecto lee credenciales desde un archivo `.env` (no se versiona).
+
+1) Copia el ejemplo:
+```bash
+copy .env.example .env
+```
+
+2) Ajusta valores si lo necesitas (puertos/credenciales).
+
 ### Levantar el proyecto
 1) Abre una terminal en la carpeta del proyecto (donde está `docker-compose.yml`).
 2) Ejecuta:
@@ -56,14 +66,14 @@ docker compose up -d --build
 3) Abre:
 - App: `http://localhost:8080/`
 - phpMyAdmin: `http://localhost:8081/`
-  - Servidor: `db`
-  - Usuario: `root`
-  - Contraseña: `root`
+  - Servidor: el valor de `DB_HOST` (por defecto `db`)
+  - Usuario: `PMA_USER` (por defecto `root`)
+  - Contraseña: `MYSQL_ROOT_PASSWORD`
 
 ### Puertos (por defecto)
-- Web (Apache/PHP): `8080 -> 80`
-- phpMyAdmin: `8081 -> 80`
-- MySQL: `3307 -> 3306`
+- Web (Apache/PHP): `WEB_PORT -> 80`
+- phpMyAdmin: `PHPMYADMIN_PORT -> 80`
+- MySQL: `MYSQL_PORT -> 3306`
 
 ### Apagar contenedores
 ```bash

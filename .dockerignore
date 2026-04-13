@@ -1,7 +1,8 @@
 .git
 .gitignore
+.env
+.env.*
 docker/mysql/data
 Microsoft
 *.log
 node_modules
-

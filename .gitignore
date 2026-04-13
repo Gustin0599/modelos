@@ -1,0 +1,37 @@
+# --- OS / Editor junk ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# --- Logs / temp ---
+*.log
+*.tmp
+
+# --- Dependencies (if added later) ---
+node_modules/
+vendor/
+
+# --- Env / secrets ---
+.env
+.env.*
+!.env.example
+!.env.ejemplo
+!.envejemplo
+
+# --- Test / tooling caches (if added later) ---
+.phpunit.result.cache
+coverage/
+
+# --- Local machine caches accidentally committed ---
+Microsoft/
+
+# --- Local Docker data (keep init scripts tracked) ---
+docker/mysql/data/

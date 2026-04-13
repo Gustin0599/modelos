@@ -63,7 +63,7 @@ if ($input && json_last_error() !== JSON_ERROR_NONE) {
 try {
     if ($method === "GET") {
         fixProgramsMojibake($pdo);
-        // Lista de estudiantes + nombre del programa (si tiene).
+        // Lista de estudiantes + nombre del programa.
         $stmt = $pdo->query("SELECT s.Id, s.first_name, s.last_name, s.email, s.program_id, p.name AS program_name FROM students s LEFT JOIN programs p ON p.id = s.program_id ORDER BY s.Id ASC");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         respond(200, ["success" => true, "data" => $rows]);

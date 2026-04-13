@@ -3,12 +3,14 @@ services:
     build: .
     container_name: clase_web
     ports:
-      - "8080:80"
+      - "${WEB_PORT:-8080}:80"
+    env_file:
+      - .env
     environment:
-      DB_HOST: db
-      DB_NAME: clase_db
-      DB_USER: clase_user
-      DB_PASS: clase123
+      DB_HOST: ${DB_HOST:-db}
+      DB_NAME: ${DB_NAME:-clase_db}
+      DB_USER: ${DB_USER:-clase_user}
+      DB_PASS: ${DB_PASS:-clase123}
     volumes:
       - ./:/var/www/html
     depends_on:
@@ -18,13 +20,15 @@ services:
     image: mysql:8.0
     container_name: clase_db
     command: --default-authentication-plugin=mysql_native_password
+    env_file:
+      - .env
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: clase_db
-      MYSQL_USER: clase_user
-      MYSQL_PASSWORD: clase123
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-clase_db}
+      MYSQL_USER: ${DB_USER:-clase_user}
+      MYSQL_PASSWORD: ${DB_PASS:-clase123}
     ports:
-      - "3307:3306"
+      - "${MYSQL_PORT:-3307}:3306"
     volumes:
       - dbdata:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
@@ -32,12 +36,14 @@ services:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     container_name: clase_phpmyadmin
+    env_file:
+      - .env
     environment:
-      PMA_HOST: db
-      PMA_USER: root
-      PMA_PASSWORD: root
+      PMA_HOST: ${DB_HOST:-db}
+      PMA_USER: ${PMA_USER:-root}
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
     ports:
-      - "8081:80"
+      - "${PHPMYADMIN_PORT:-8081}:80"
     depends_on:
       - db
 

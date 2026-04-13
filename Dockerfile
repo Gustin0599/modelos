@@ -6,6 +6,6 @@ RUN docker-php-ext-install pdo pdo_mysql \
 
 WORKDIR /var/www/html
 
-# Copiamos el proyecto dentro de la imagen (en desarrollo se sobreescribe con volume).
+# Copiamos el proyecto dentro de la imagen 
 COPY . /var/www/html
 
